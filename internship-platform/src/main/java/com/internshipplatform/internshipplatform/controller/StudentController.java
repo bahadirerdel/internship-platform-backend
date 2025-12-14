@@ -1,10 +1,12 @@
 package com.internshipplatform.internshipplatform.controller;
 
+import com.internshipplatform.internshipplatform.dto.InterviewResponseDTO;
 import com.internshipplatform.internshipplatform.dto.ResumeFileDto;
 import com.internshipplatform.internshipplatform.dto.StudentProfileResponse;
 import com.internshipplatform.internshipplatform.dto.StudentProfileUpdateRequest;
 import com.internshipplatform.internshipplatform.entity.Student;
 import com.internshipplatform.internshipplatform.security.JwtUtil;
+import com.internshipplatform.internshipplatform.service.InterviewService;
 import com.internshipplatform.internshipplatform.service.StudentService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -17,6 +19,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/students")
 @RequiredArgsConstructor
@@ -24,7 +28,7 @@ public class StudentController {
 
     private final StudentService studentService;
     private final JwtUtil jwtUtil;
-
+    private final InterviewService interviewService;
 
 
     @PreAuthorize("hasRole('STUDENT')")
@@ -79,6 +83,12 @@ public class StudentController {
         Long userId = jwtUtil.getUserIdFromRequest(request);
         studentService.deleteResume(userId);
         return ResponseEntity.ok("Resume deleted");
+    }
+    @PreAuthorize("hasRole('STUDENT')")
+    @GetMapping("/me/interviews")
+    public ResponseEntity<List<InterviewResponseDTO>> getMyInterviews(HttpServletRequest request) {
+        Long userId = jwtUtil.getUserIdFromRequest(request);
+        return ResponseEntity.ok(interviewService.getMyStudentInterviews(userId));
     }
 
 

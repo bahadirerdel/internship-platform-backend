@@ -1,5 +1,6 @@
 package com.internshipplatform.internshipplatform.repository;
 
+import com.internshipplatform.internshipplatform.entity.ApplicationStatus;
 import com.internshipplatform.internshipplatform.entity.InternshipApplication;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -16,4 +17,9 @@ public interface InternshipApplicationRepository extends JpaRepository<Internshi
 
     List<InternshipApplication> findByInternshipId(Long internshipId);
 
+    Optional<InternshipApplication> findFirstByStudent_IdAndInternship_Company_IdAndStatus(
+            Long studentUserId,
+            Long companyUserId,
+            ApplicationStatus status
+    );
 }
