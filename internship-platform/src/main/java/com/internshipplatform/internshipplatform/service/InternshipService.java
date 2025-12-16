@@ -1,12 +1,11 @@
 package com.internshipplatform.internshipplatform.service;
+import com.internshipplatform.internshipplatform.entity.*;
 import com.internshipplatform.internshipplatform.exception.ResourceNotFoundException;
 import com.internshipplatform.internshipplatform.dto.InternshipRequestDTO;
 import com.internshipplatform.internshipplatform.dto.InternshipResponseDTO;
 import com.internshipplatform.internshipplatform.dto.InternshipUpdateRequest;
-import com.internshipplatform.internshipplatform.entity.Internship;
-import com.internshipplatform.internshipplatform.entity.Role;
-import com.internshipplatform.internshipplatform.entity.User;
 import com.internshipplatform.internshipplatform.mapper.InternshipMapper;
+import com.internshipplatform.internshipplatform.repository.CompanyRepository;
 import com.internshipplatform.internshipplatform.repository.InternshipRepository;
 import com.internshipplatform.internshipplatform.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -27,12 +26,12 @@ public class InternshipService {
     private final InternshipRepository internshipRepository;
     private final UserRepository userRepository;
     private final InternshipMapper internshipMapper;
-
+    private final CompanyRepository companyRepository;
     // Public internship listing
     public List<InternshipResponseDTO> getAllPublicInternships() {
-        return internshipRepository.findAll()
-                .stream()
-                .map(internshipMapper::toResponseDTO)
+        List<Internship> internships = internshipRepository.findAll();
+        return internships.stream()
+                .map(this::toResponseDTOWithCompany)
                 .toList();
     }
 
@@ -40,7 +39,7 @@ public class InternshipService {
     public List<InternshipResponseDTO> getMyCompanyInternships(Long companyUserId) {
         return internshipRepository.findByCompany_Id(companyUserId)
                 .stream()
-                .map(internshipMapper::toResponseDTO)
+                .map(this::toResponseDTOWithCompany)
                 .toList();
     }
 
@@ -55,7 +54,7 @@ public class InternshipService {
         Internship internship = internshipMapper.toEntity(request, companyUser);
         Internship saved = internshipRepository.save(internship);
 
-        return internshipMapper.toResponseDTO(saved);
+        return toResponseDTOWithCompany(saved);
     }
 
     // Search internships (public)
@@ -116,7 +115,7 @@ public class InternshipService {
                 pageable
         );
 
-        return internships.map(internshipMapper::toResponseDTO);
+        return internships.map(this::toResponseDTOWithCompany);
     }
 
 
@@ -127,7 +126,7 @@ public class InternshipService {
     public List<InternshipResponseDTO> getMyInternships(Long currentUserId) {
         return internshipRepository.findByCompanyIdOrderByCreatedAtDesc(currentUserId)
                 .stream()
-                .map(internshipMapper::toResponseDTO)
+                .map(this::toResponseDTOWithCompany)
                 .toList();
     }
 
@@ -140,7 +139,7 @@ public class InternshipService {
             throw new RuntimeException("You are not the owner of this internship.");
         }
 
-        return internshipMapper.toResponseDTO(internship);
+        return toResponseDTOWithCompany(internship);
     }
 
     // Company → update internship
@@ -169,7 +168,7 @@ public class InternshipService {
 
         internship.setUpdatedAt(Instant.now());
         Internship saved = internshipRepository.save(internship);
-        return internshipMapper.toResponseDTO(saved);
+        return toResponseDTOWithCompany(saved);
     }
 
     // Company → delete internship
@@ -185,12 +184,38 @@ public class InternshipService {
         internshipRepository.delete(internship);
     }
 
-    public InternshipResponseDTO getInternshipById(Long internshipId) {
-        Internship internship = internshipRepository.findById(internshipId)
+    public InternshipResponseDTO getInternshipById(Long id) {
+        Internship internship = internshipRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Internship not found"));
 
-        return internshipMapper.toResponseDTO(internship);
+        return toResponseDTOWithCompany(internship);
     }
+    private InternshipResponseDTO toResponseDTOWithCompany(Internship internship) {
+        Long companyUserId = internship.getCompany() != null ? internship.getCompany().getId() : null;
 
+        Company company = null;
+        if (companyUserId != null) {
+            company = companyRepository.findByUserId(companyUserId).orElse(null);
+        }
+
+        VerificationStatus status = company != null ? company.getVerificationStatus() : VerificationStatus.UNVERIFIED;
+
+        return InternshipResponseDTO.builder()
+                .id(internship.getId())
+                .title(internship.getTitle())
+                .description(internship.getDescription())
+                .location(internship.getLocation())
+                .internshipType(internship.getInternshipType())
+                .salaryRange(internship.getSalaryRange())
+                .requiredSkills(internship.getRequiredSkills())
+                .applicationDeadline(internship.getApplicationDeadline())
+                .companyId(companyUserId) // keep same behavior as now
+                .companyName(company != null ? company.getName() : null)
+                .companyVerificationStatus(status.name())
+                .companyVerified(status == VerificationStatus.APPROVED)
+                .createdAt(internship.getCreatedAt())
+                .updatedAt(internship.getUpdatedAt())
+                .build();
+    }
 
 }

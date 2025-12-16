@@ -45,5 +45,12 @@ public class CompanyController {
         Long userId = jwtUtil.getUserIdFromRequest(request);
         return ResponseEntity.ok(interviewService.getMyCompanyInterviews(userId));
     }
+    @PreAuthorize("hasRole('COMPANY')")
+    @PostMapping("/me/verification-request")
+    public ResponseEntity<String> requestVerification(HttpServletRequest request) {
+        Long userId = jwtUtil.getUserIdFromRequest(request);
+        companyService.requestVerification(userId);
+        return ResponseEntity.ok("Verification request submitted");
+    }
 
 }

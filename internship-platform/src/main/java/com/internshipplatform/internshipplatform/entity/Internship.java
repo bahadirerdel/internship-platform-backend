@@ -2,6 +2,7 @@ package com.internshipplatform.internshipplatform.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -43,6 +44,7 @@ public class Internship {
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
+    @UpdateTimestamp
     private Instant updatedAt;
 
     @PrePersist

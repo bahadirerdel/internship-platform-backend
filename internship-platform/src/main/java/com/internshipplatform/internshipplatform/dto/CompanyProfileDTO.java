@@ -11,7 +11,6 @@ public class CompanyProfileDTO {
 
     private Long id;
     private Long userId;
-
     private String name;
     private String industry;
     private String website;

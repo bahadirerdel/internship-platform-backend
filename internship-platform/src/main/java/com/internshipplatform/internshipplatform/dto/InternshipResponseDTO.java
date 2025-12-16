@@ -15,8 +15,9 @@ public class InternshipResponseDTO {
     private Long id;
 
     private Long companyId;
-    private String companyName;      // from User name (or later CompanyProfile name)
-
+    private String companyName;      // from Username (or later CompanyProfile name)
+    private String companyVerificationStatus; // "APPROVED", "PENDING", ...
+    private Boolean companyVerified;          // true/false
     private String title;
     private String description;
     private String location;

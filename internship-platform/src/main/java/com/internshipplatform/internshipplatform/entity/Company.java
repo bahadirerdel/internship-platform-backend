@@ -3,6 +3,8 @@ package com.internshipplatform.internshipplatform.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.Instant;
+
 @Entity
 @Table(name = "companies")
 @Getter
@@ -29,4 +31,18 @@ public class Company {
     private String size;          // e.g. "11-50", "51-200"
     private String description;   // about the company
     private String logoUrl;       // future: logo image
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "verification_status", nullable = false)
+    private VerificationStatus verificationStatus = VerificationStatus.UNVERIFIED;
+
+    @Column(name = "verification_requested_at")
+    private Instant verificationRequestedAt;
+
+    @Column(name = "verification_reviewed_at")
+    private Instant verificationReviewedAt;
+
+    @Column(name = "verification_note", length = 2000)
+    private String verificationNote;
+
 }

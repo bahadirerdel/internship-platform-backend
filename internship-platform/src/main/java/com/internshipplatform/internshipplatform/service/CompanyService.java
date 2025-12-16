@@ -3,11 +3,16 @@ package com.internshipplatform.internshipplatform.service;
 import com.internshipplatform.internshipplatform.dto.CompanyProfileDTO;
 import com.internshipplatform.internshipplatform.entity.Company;
 import com.internshipplatform.internshipplatform.entity.User;
+import com.internshipplatform.internshipplatform.entity.VerificationStatus;
+import com.internshipplatform.internshipplatform.exception.ForbiddenException;
+import com.internshipplatform.internshipplatform.exception.ResourceNotFoundException;
 import com.internshipplatform.internshipplatform.mapper.CompanyMapper;
 import com.internshipplatform.internshipplatform.repository.CompanyRepository;
 import com.internshipplatform.internshipplatform.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
@@ -52,4 +57,23 @@ public class CompanyService {
 
         return companyRepository.save(company);
     }
+
+
+    public void requestVerification(Long companyUserId) {
+
+        Company company = companyRepository.findByUserId(companyUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
+
+        if (company.getVerificationStatus() == VerificationStatus.APPROVED) {
+            throw new ForbiddenException("Company is already verified");
+        }
+
+        company.setVerificationStatus(VerificationStatus.PENDING);
+        company.setVerificationRequestedAt(Instant.now());
+        company.setVerificationReviewedAt(null);
+        company.setVerificationNote(null);
+
+        companyRepository.save(company);
+    }
+
 }
