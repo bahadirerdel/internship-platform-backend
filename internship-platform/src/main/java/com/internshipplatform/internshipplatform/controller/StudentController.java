@@ -1,9 +1,6 @@
 package com.internshipplatform.internshipplatform.controller;
 
-import com.internshipplatform.internshipplatform.dto.InterviewResponseDTO;
-import com.internshipplatform.internshipplatform.dto.ResumeFileDto;
-import com.internshipplatform.internshipplatform.dto.StudentProfileResponse;
-import com.internshipplatform.internshipplatform.dto.StudentProfileUpdateRequest;
+import com.internshipplatform.internshipplatform.dto.*;
 import com.internshipplatform.internshipplatform.entity.Student;
 import com.internshipplatform.internshipplatform.security.JwtUtil;
 import com.internshipplatform.internshipplatform.service.InterviewService;
@@ -91,6 +88,11 @@ public class StudentController {
         return ResponseEntity.ok(interviewService.getMyStudentInterviews(userId));
     }
 
-
+    @PreAuthorize("hasRole('STUDENT')")
+    @GetMapping("/me/strength")
+    public ProfileStrengthResponseDTO getMyStrength(HttpServletRequest request) {
+        Long userId = jwtUtil.getUserIdFromRequest(request);
+        return studentService.getMyProfileStrength(userId);
+    }
 }
 

@@ -1,5 +1,6 @@
 package com.internshipplatform.internshipplatform.service;
 
+import com.internshipplatform.internshipplatform.dto.ProfileStrengthResponseDTO;
 import com.internshipplatform.internshipplatform.dto.ResumeFileDto;
 import com.internshipplatform.internshipplatform.dto.StudentProfileResponse;
 import com.internshipplatform.internshipplatform.dto.StudentProfileUpdateRequest;
@@ -16,6 +17,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -144,6 +146,46 @@ public class StudentService {
 
         return dto;
     }
+    public ProfileStrengthResponseDTO getMyProfileStrength(Long userId) {
 
+        Student student = studentRepository.findByUser_Id(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
+
+        int score = 0;
+        List<String> missing = new java.util.ArrayList<>();
+
+        // Weights (tweak anytime)
+        score += addFieldScore(student.getUniversity(), 15, "university", missing);
+        score += addFieldScore(student.getDepartment(), 15, "department", missing);
+        score += (student.getGraduationYear() != null) ? 10 : addMissing("graduationYear", missing);
+
+        score += addFieldScore(student.getBio(), 15, "bio", missing);
+        score += addFieldScore(student.getSkills(), 15, "skills", missing);
+
+        // Resume upload presence
+        score += (isNotBlank(student.getResumeFileName())) ? 30 : addMissing("resume", missing);
+
+        if (score > 100) score = 100;
+
+        return ProfileStrengthResponseDTO.builder()
+                .score(score)
+                .missingFields(missing)
+                .build();
+    }
+
+    private int addFieldScore(String value, int points, String fieldName, List<String> missing) {
+        if (isNotBlank(value)) return points;
+        missing.add(fieldName);
+        return 0;
+    }
+
+    private int addMissing(String fieldName, List<String> missing) {
+        missing.add(fieldName);
+        return 0;
+    }
+
+    private boolean isNotBlank(String s) {
+        return s != null && !s.trim().isEmpty();
+    }
 
 }
