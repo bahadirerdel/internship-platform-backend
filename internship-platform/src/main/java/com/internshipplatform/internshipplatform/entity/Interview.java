@@ -14,6 +14,11 @@ import java.time.Instant;
 @Builder
 public class Interview {
 
+    public enum InterviewStatus {
+        SCHEDULED,
+        CANCELLED
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -46,4 +51,18 @@ public class Interview {
     void onUpdate() {
         this.updatedAt = Instant.now();
     }
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private InterviewStatus status = InterviewStatus.SCHEDULED;
+
+    @Column(name = "cancel_reason", length = 1000)
+    private String cancelReason;
+
+    @Column(name = "cancelled_at")
+    private Instant cancelledAt;
+
+    @Column(name = "cancelled_by_user_id")
+    private Long cancelledByUserId;
+
 }

@@ -43,19 +43,29 @@ public class InternshipService {
                 .toList();
     }
 
-    // Company creates internship
     public InternshipResponseDTO createInternship(Long companyUserId, InternshipRequestDTO request) {
+
         User companyUser = userRepository.findById(companyUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         if (companyUser.getRole() != Role.COMPANY) {
             throw new ForbiddenException("Only company accounts can create internships");
         }
+
+        // ✅ NEW: verification gate
+        Company company = companyRepository.findByUserId(companyUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Company profile not found"));
+
+        if (company.getVerificationStatus() != VerificationStatus.APPROVED) {
+            throw new ForbiddenException("Company must be verified to create internships");
+        }
+
         Internship internship = internshipMapper.toEntity(request, companyUser);
         Internship saved = internshipRepository.save(internship);
 
         return toResponseDTOWithCompany(saved);
     }
+
 
     // Search internships (public)
     public Page<InternshipResponseDTO> searchInternships(

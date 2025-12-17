@@ -64,13 +64,7 @@ public class InterviewService {
             app.setStatus(ApplicationStatus.INTERVIEW);
             applicationRepository.save(app);
         }
-
-        return InterviewResponseDTO.builder()
-                .id(saved.getId())
-                .applicationId(app.getId())
-                .scheduledAt(saved.getScheduledAt().toString())
-                .meetingLink(saved.getMeetingLink())
-                .build();
+        return toResponseDTO(saved);
     }
 
     /**
@@ -91,12 +85,7 @@ public class InterviewService {
         Interview interview = interviewRepository.findByApplication_Id(applicationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Interview not scheduled yet"));
 
-        return InterviewResponseDTO.builder()
-                .id(interview.getId())
-                .applicationId(applicationId)
-                .scheduledAt(interview.getScheduledAt().toString())
-                .meetingLink(interview.getMeetingLink())
-                .build();
+        return toResponseDTO(interview);
     }
     @Transactional(readOnly = true)
     public List<InterviewResponseDTO> getMyStudentInterviews(Long studentUserId) {
@@ -125,4 +114,61 @@ public class InterviewService {
                         .build())
                 .collect(Collectors.toList());
     }
+    @Transactional
+    public InterviewResponseDTO cancelInterview(
+            Long applicationId,
+            Long companyUserId,
+            String reason
+    ) {
+
+        InternshipApplication app = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
+
+        // ✅ Ownership check (correct)
+        Long ownerCompanyUserId = app.getInternship().getCompany().getId();
+        if (!ownerCompanyUserId.equals(companyUserId)) {
+            throw new ForbiddenException("You are not the owner of this internship");
+        }
+
+        Interview interview = interviewRepository.findByApplication_Id(applicationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Interview not scheduled yet"));
+
+        // ✅ Prevent double cancellation
+        if (interview.getStatus() == Interview.InterviewStatus.CANCELLED) {
+            throw new ForbiddenException("Interview already cancelled");
+        }
+
+        // ✅ Cancel interview
+        interview.setStatus(Interview.InterviewStatus.CANCELLED);
+        interview.setCancelReason(reason);
+        interview.setCancelledAt(Instant.now());
+        interview.setCancelledByUserId(companyUserId);
+
+        Interview saved = interviewRepository.save(interview);
+
+        // ✅ Return response DTO
+        return toResponseDTO(saved);
+    }
+
+
+    private InterviewResponseDTO toResponseDTO(Interview interview) {
+        return InterviewResponseDTO.builder()
+                .id(interview.getId())
+                .applicationId(interview.getApplication().getId())
+                .scheduledAt(
+                        interview.getScheduledAt() != null
+                                ? interview.getScheduledAt().toString()
+                                : null
+                )
+                .meetingLink(interview.getMeetingLink())
+                .status(interview.getStatus().name())
+                .cancelReason(interview.getCancelReason())
+                .cancelledAt(
+                        interview.getCancelledAt() != null
+                                ? interview.getCancelledAt().toString()
+                                : null
+                )
+                .build();
+    }
+
 }

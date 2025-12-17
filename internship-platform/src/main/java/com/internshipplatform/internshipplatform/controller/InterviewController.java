@@ -1,5 +1,6 @@
 package com.internshipplatform.internshipplatform.controller;
 
+import com.internshipplatform.internshipplatform.dto.CancelInterviewRequest;
 import com.internshipplatform.internshipplatform.dto.InterviewResponseDTO;
 import com.internshipplatform.internshipplatform.dto.ScheduleInterviewRequest;
 import com.internshipplatform.internshipplatform.security.JwtUtil;
@@ -42,4 +43,16 @@ public class InterviewController {
         InterviewResponseDTO dto = interviewService.getInterview(applicationId, userId);
         return ResponseEntity.ok(dto);
     }
+    @PreAuthorize("hasRole('COMPANY')")
+    @PostMapping("/{applicationId}/cancel")
+    public ResponseEntity<?> cancelInterview(
+            @PathVariable Long applicationId,
+            @RequestBody(required = false) CancelInterviewRequest body,
+            HttpServletRequest request
+    ) {
+        Long companyUserId = jwtUtil.getUserIdFromRequest(request);
+        interviewService.cancelInterview(applicationId, companyUserId, body != null ? body.getReason() : null);
+        return ResponseEntity.ok("Interview cancelled");
+    }
+
 }
