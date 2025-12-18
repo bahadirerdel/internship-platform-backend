@@ -17,7 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class InternshipApplicationService {
 
     private final InternshipApplicationRepository applicationRepository;
-    private final CompanyRepository companyRepository; // ✅ ADD THIS
+    private final CompanyRepository companyRepository;
+    private final NotificationService notificationService;
 
     @Transactional
     public void updateApplicationStatus(
@@ -57,6 +58,14 @@ public class InternshipApplicationService {
 
         app.setStatus(newStatus);
         applicationRepository.save(app);
+        Long studentUserId = app.getStudent().getId(); // in your model student id == userId
+        String msg = "Your application for '" + app.getInternship().getTitle() +
+                "' is now " + newStatus.name();
+
+        notificationService.notifyUser(studentUserId, msg);
+        String companyMsg = "You updated application #" + app.getId() +
+                " to " + newStatus.name();
+        notificationService.notifyUser(companyUserId, companyMsg);
     }
 }
 

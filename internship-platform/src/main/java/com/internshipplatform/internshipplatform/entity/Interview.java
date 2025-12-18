@@ -52,6 +52,7 @@ public class Interview {
         this.updatedAt = Instant.now();
     }
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private InterviewStatus status = InterviewStatus.SCHEDULED;

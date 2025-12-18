@@ -21,22 +21,25 @@ public class InterviewService {
 
     private final InterviewRepository interviewRepository;
     private final InternshipApplicationRepository applicationRepository;
+    private final NotificationService notificationService;
 
     /**
      * Company schedules or updates interview for an application.
      */
     @Transactional
-    public InterviewResponseDTO scheduleOrUpdateInterview(Long applicationId, Long companyUserId, ScheduleInterviewRequest req) {
+    public InterviewResponseDTO scheduleOrUpdateInterview(
+            Long applicationId,
+            Long companyUserId,
+            ScheduleInterviewRequest req
+    ) {
         InternshipApplication app = applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
 
-        // Ownership check: Internship.company is a User in your model
         Long ownerCompanyUserId = app.getInternship().getCompany().getId();
         if (!ownerCompanyUserId.equals(companyUserId)) {
             throw new ForbiddenException("You are not the owner of this internship");
         }
 
-        // Optional sanity: don't allow interview scheduling for withdrawn/finalized apps
         if (app.getStatus() == ApplicationStatus.WITHDRAWN) {
             throw new ForbiddenException("Cannot schedule interview for withdrawn application");
         }
@@ -46,26 +49,46 @@ public class InterviewService {
 
         Instant scheduledAt;
         try {
-            scheduledAt = Instant.parse(req.getScheduledAt()); // expects "....Z"
+            scheduledAt = Instant.parse(req.getScheduledAt()); // expects "...Z"
         } catch (Exception e) {
             throw new ForbiddenException("Invalid scheduledAt format. Use ISO-8601 UTC like 2025-12-20T14:00:00Z");
         }
 
         Interview interview = interviewRepository.findByApplication_Id(applicationId)
-                .orElseGet(() -> Interview.builder().application(app).build());
+                .orElseGet(() -> Interview.builder()
+                        .application(app)
+                        .status(Interview.InterviewStatus.SCHEDULED) // ✅ IMPORTANT
+                        .build());
+
+        // If it already existed but status was null due to old bad rows/code, fix it too:
+        if (interview.getStatus() == null) {
+            interview.setStatus(Interview.InterviewStatus.SCHEDULED);
+        }
 
         interview.setScheduledAt(scheduledAt);
         interview.setMeetingLink(req.getMeetingLink());
 
         Interview saved = interviewRepository.save(interview);
 
-        // Nice UX: once interview is scheduled, set application status to INTERVIEW
+        // ✅ Your model: Student has userId field, not User relation
+        Long studentUserId = app.getStudent().getId();
+
+        String msg = "Interview scheduled for '" + app.getInternship().getTitle() +
+                "' at " + saved.getScheduledAt();
+        notificationService.notifyUser(studentUserId, msg);
+
+        String companyMsg = "You scheduled an interview for application #" + app.getId() +
+                " at " + saved.getScheduledAt();
+        notificationService.notifyUser(companyUserId, companyMsg);
+
         if (app.getStatus() != ApplicationStatus.INTERVIEW) {
             app.setStatus(ApplicationStatus.INTERVIEW);
             applicationRepository.save(app);
         }
+
         return toResponseDTO(saved);
     }
+
 
     /**
      * Student or company can view interview for an application if they are a party.
@@ -124,7 +147,7 @@ public class InterviewService {
         InternshipApplication app = applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
 
-        // ✅ Ownership check (correct)
+        // Ownership check (correct)
         Long ownerCompanyUserId = app.getInternship().getCompany().getId();
         if (!ownerCompanyUserId.equals(companyUserId)) {
             throw new ForbiddenException("You are not the owner of this internship");
@@ -145,7 +168,13 @@ public class InterviewService {
         interview.setCancelledByUserId(companyUserId);
 
         Interview saved = interviewRepository.save(interview);
+        Long studentUserId = app.getStudent().getId();
+        String msg = "Interview cancelled for '" + app.getInternship().getTitle() + "'.";
+        notificationService.notifyUser(studentUserId, msg);
 
+        String companyMsg = "You cancelled an interview #" + app.getId() +
+                " at " + interview.getScheduledAt();
+        notificationService.notifyUser(companyUserId, companyMsg);
         // ✅ Return response DTO
         return toResponseDTO(saved);
     }
