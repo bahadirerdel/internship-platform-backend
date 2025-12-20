@@ -29,7 +29,9 @@ public class InternshipService {
     private final CompanyRepository companyRepository;
     // Public internship listing
     public List<InternshipResponseDTO> getAllPublicInternships() {
-        List<Internship> internships = internshipRepository.findAll();
+        List<Internship> internships = internshipRepository
+                .findAllByVisibilityStatus(Internship.InternshipVisibility.PUBLIC);
+
         return internships.stream()
                 .map(this::toResponseDTOWithCompany)
                 .toList();
@@ -116,6 +118,7 @@ public class InternshipService {
         Pageable pageable = PageRequest.of(page, size, sort);
 
         Page<Internship> internships = internshipRepository.searchInternships(
+                Internship.InternshipVisibility.PUBLIC,
                 keywordPattern,
                 locationLower,
                 typeLower,
@@ -124,6 +127,7 @@ public class InternshipService {
                 to,
                 pageable
         );
+
 
         return internships.map(this::toResponseDTOWithCompany);
     }

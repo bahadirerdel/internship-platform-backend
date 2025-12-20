@@ -58,4 +58,23 @@ public class Internship {
     void onUpdate() {
         this.updatedAt = Instant.now();
     }
+
+    public enum InternshipVisibility {
+        PUBLIC,
+        HIDDEN
+    }
+    @Enumerated(EnumType.STRING)
+    @Column(name = "visibility_status", nullable = false)
+    @Builder.Default
+    private InternshipVisibility visibilityStatus = InternshipVisibility.PUBLIC;
+
+    @Column(name = "hidden_reason", length = 2000)
+    private String hiddenReason;
+
+    @Column(name = "hidden_at")
+    private Instant hiddenAt;
+
+    @Column(name = "hidden_by_admin_user_id")
+    private Long hiddenByAdminUserId;
+
 }

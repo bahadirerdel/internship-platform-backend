@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.Instant;
+
 @Entity
 @Table(name = "users")
 @Getter
@@ -31,4 +33,17 @@ public class User {
 
     @Column(nullable = false)
     private String name;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean enabled = true;
+
+    @Column(name = "blocked_reason", length = 2000)
+    private String blockedReason;
+
+    @Column(name = "blocked_at")
+    private Instant blockedAt;
+
+    @Column(name = "blocked_by_admin_user_id")
+    private Long blockedByAdminUserId;
 }

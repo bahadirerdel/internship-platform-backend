@@ -1,6 +1,5 @@
 package com.internshipplatform.internshipplatform.security;
 
-import com.internshipplatform.internshipplatform.entity.Role;
 import com.internshipplatform.internshipplatform.entity.User;
 import com.internshipplatform.internshipplatform.repository.UserRepository;
 import jakarta.servlet.FilterChain;
@@ -26,6 +25,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
 
+    private void writeBlockedResponse(HttpServletResponse response) throws IOException {
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        response.setContentType("application/json");
+        response.getWriter().write("""
+            {"status":403,"error":"Forbidden","message":"Account is blocked"}
+        """);
+    }
+
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
@@ -33,19 +40,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        // already authenticated
         if (SecurityContextHolder.getContext().getAuthentication() != null) {
             filterChain.doFilter(request, response);
             return;
         }
 
         try {
-            Long userId = jwtUtil.getUserIdFromRequest(request); // now returns null if missing
+            Long userId = jwtUtil.getUserIdFromRequest(request);
 
             if (userId != null) {
                 User user = userRepository.findById(userId).orElse(null);
 
                 if (user != null) {
+
+                    // ✅ BLOCK CHECK (USING enabled)
+                    if (!user.isEnabled()) {
+                        writeBlockedResponse(response);
+                        return;
+                    }
+
                     String authorityName = "ROLE_" + user.getRole().name();
                     List<GrantedAuthority> authorities =
                             List.of(new SimpleGrantedAuthority(authorityName));
@@ -58,36 +71,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception ignored) {
-            // invalid token -> stay anonymous, let SecurityConfig decide (401/403)
+            // invalid token → anonymous
         }
 
         filterChain.doFilter(request, response);
     }
-
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getServletPath();
-
-        // swagger
-        if (path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs") || path.equals("/swagger-ui.html")) {
-            return true;
-        }
-
-        // auth
-        if (path.startsWith("/api/auth")) {
-            return true;
-        }
-
-        // public GET internships endpoints
-        if ("GET".equals(request.getMethod())) {
-            if (path.equals("/api/internships")
-                    || path.equals("/api/internships/search")
-                    || path.matches("^/api/internships/\\d+$")) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
 }
+

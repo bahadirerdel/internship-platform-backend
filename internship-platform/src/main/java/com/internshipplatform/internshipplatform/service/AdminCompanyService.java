@@ -18,6 +18,7 @@ import java.util.List;
 public class AdminCompanyService {
 
     private final CompanyRepository companyRepository;
+    private final NotificationService notificationService;
 
     public List<CompanyProfileDTO> getPendingVerificationRequests() {
         return companyRepository.findAllByVerificationStatus(VerificationStatus.PENDING)
@@ -38,17 +39,34 @@ public class AdminCompanyService {
 
     public void verifyCompany(Long companyId, AdminVerifyCompanyRequest req) {
 
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
+        VerificationStatus status = req.getStatus();
+
         if (req.getStatus() != VerificationStatus.APPROVED && req.getStatus() != VerificationStatus.REJECTED) {
             throw new ForbiddenException("Status must be APPROVED or REJECTED");
         }
 
-        Company company = companyRepository.findById(companyId)
-                .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
+
 
         company.setVerificationStatus(req.getStatus());
         company.setVerificationReviewedAt(Instant.now());
         company.setVerificationNote(req.getNote());
 
         companyRepository.save(company);
+
+        Long companyUserId = company.getUserId();
+
+        String msg;
+        if (status == VerificationStatus.APPROVED) {
+            msg = "✅ Your company verification request was APPROVED.";
+        } else {
+            String note = (req.getNote() != null && !req.getNote().isBlank())
+                    ? " Reason: " + req.getNote()
+                    : "";
+            msg = "❌ Your company verification request was REJECTED." + note;
+        }
+
+        notificationService.notifyUser(companyUserId, msg);
     }
 }
