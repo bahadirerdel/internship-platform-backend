@@ -46,4 +46,9 @@ public class User {
 
     @Column(name = "blocked_by_admin_user_id")
     private Long blockedByAdminUserId;
+
+    @Column(name = "email_verified", nullable = false)
+    @Builder.Default
+    private boolean emailVerified = false;
+
 }

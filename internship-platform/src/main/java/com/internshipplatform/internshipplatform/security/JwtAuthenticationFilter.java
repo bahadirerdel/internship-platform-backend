@@ -53,7 +53,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 if (user != null) {
 
-                    // ✅ BLOCK CHECK (USING enabled)
                     if (!user.isEnabled()) {
                         writeBlockedResponse(response);
                         return;
