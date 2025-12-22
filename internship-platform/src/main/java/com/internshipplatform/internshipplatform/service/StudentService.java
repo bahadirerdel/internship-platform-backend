@@ -91,7 +91,7 @@ public class StudentService {
         // Stored filename (used to load file)
         student.setResumeFileName(storedName);
 
-        // ✅ Original filename (used for download name)
+        // Original filename (used for download name)
         student.setResumeOriginalFileName(file.getOriginalFilename());
 
         // Metadata
