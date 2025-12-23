@@ -1,18 +1,22 @@
 package com.internshipplatform.internshipplatform.service;
 
-import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
-@Slf4j
 @Service
+@RequiredArgsConstructor
 public class EmailService {
 
-    public void sendEmail(String to, String subject, String content) {
-        // Demo: print to console instead of SMTP
-        log.info("=== EMAIL (DEMO) ===");
-        log.info("To: {}", to);
-        log.info("Subject: {}", subject);
-        log.info("Content:\n{}", content);
-        log.info("====================");
+    private final JavaMailSender mailSender;
+
+    public void sendEmail(String to, String subject, String body) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(to);
+        message.setSubject(subject);
+        message.setText(body);
+
+        mailSender.send(message);
     }
 }
