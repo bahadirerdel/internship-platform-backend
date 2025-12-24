@@ -117,7 +117,6 @@ public class AuthService {
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
     public void sendEmailVerification(User user) {
-        // remove old verify tokens (optional)
         tokenRepository.deleteByUserIdAndType(user.getId(), TokenType.EMAIL_VERIFY);
 
         String token = generateToken();
@@ -129,13 +128,15 @@ public class AuthService {
                 .build();
         tokenRepository.save(t);
 
-        String link = "http://localhost:8080/api/auth/verify-email?token=" + token;
+        String link = "http://localhost:5173/verify-email?token=" + token;
+
         emailService.sendEmail(
                 user.getEmail(),
                 "Verify your email",
-                "Click to verify (demo):\n" + link
+                "Click to verify:\n" + link
         );
     }
+
     @Transactional
     public void verifyEmail(String token) {
         UserToken t = tokenRepository.findByTokenAndType(token, TokenType.EMAIL_VERIFY)
