@@ -12,6 +12,8 @@ public class StudentMapper {
 
         var user = student.getUser();
 
+        boolean hasResume = student.getResumeFileName() != null;
+
         return StudentProfileResponse.builder()
                 .id(student.getId())
                 .userId(user.getId())
@@ -20,8 +22,18 @@ public class StudentMapper {
                 .role(user.getRole().name())
                 .university(student.getUniversity())
                 .department(student.getDepartment())
+                .graduationYear(student.getGraduationYear())
                 .bio(student.getBio())
                 .skills(student.getSkills())
+
+                // ✅ resume mappings
+                .resumeFileName(student.getResumeFileName())
+                .resumeOriginalFileName(student.getResumeOriginalFileName())
+                .resumeSize(student.getResumeSize())
+                .resumeContentType(student.getResumeContentType())
+
+                // ✅ optional URL (frontend can use it or ignore it)
+                .resumeDownloadUrl(hasResume ? "/api/students/me/resume/download" : null)
                 .build();
     }
 }

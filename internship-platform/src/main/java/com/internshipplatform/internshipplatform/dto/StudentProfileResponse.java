@@ -14,10 +14,20 @@ public class StudentProfileResponse {
     private String email;
     private String name;
     private String role;
+
     private String skills;
     private String university;
     private String department;
     private Integer graduationYear;
-    private String resumeUrl;
+
+    // ✅ Resume fields (add these)
+    private String resumeFileName;          // internal stored name (uuid)
+    private String resumeOriginalFileName;  // original uploaded file name
+    private Long resumeSize;
+    private String resumeContentType;
+
+    // Optional convenience
+    private String resumeDownloadUrl;
+
     private String bio;
 }

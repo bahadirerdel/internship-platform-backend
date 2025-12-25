@@ -1,5 +1,6 @@
 package com.internshipplatform.internshipplatform.service;
 import com.internshipplatform.internshipplatform.entity.*;
+import com.internshipplatform.internshipplatform.exception.ConflictException;
 import com.internshipplatform.internshipplatform.exception.ForbiddenException;
 import com.internshipplatform.internshipplatform.exception.ResourceNotFoundException;
 import com.internshipplatform.internshipplatform.repository.CompanyRepository;
@@ -33,7 +34,7 @@ public class AuthService {
     public AuthResponse register(RegisterRequest request) {
 
         if (userRepository.findByEmail(request.getEmail()) != null) {
-            throw new RuntimeException("Email already registered");
+            throw new ConflictException("Email already registered");
         }
 
         User user = User.builder()

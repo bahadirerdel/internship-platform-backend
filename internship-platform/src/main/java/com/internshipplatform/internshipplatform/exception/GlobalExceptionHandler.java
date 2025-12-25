@@ -1,8 +1,10 @@
 package com.internshipplatform.internshipplatform.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -11,6 +13,7 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.time.Instant;
 import java.util.stream.Collectors;
+
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -78,4 +81,22 @@ public class GlobalExceptionHandler {
         );
         return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(err);
     }
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiError> handleDataIntegrity(DataIntegrityViolationException ex, HttpServletRequest req) {
+        ApiError err = ApiError.builder()
+                .timestamp(Instant.now())
+                .status(409)
+                .error("Conflict")
+                .message("Email already in use")
+                .path(req.getRequestURI())
+                .build();
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(err);
+    }
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiError> handleBadJson(HttpMessageNotReadableException ex) {
+        return ResponseEntity.badRequest().body(
+                new ApiError(400, "Invalid request body: " + ex.getMostSpecificCause().getMessage())
+        );
+    }
+
 }

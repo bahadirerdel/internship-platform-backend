@@ -13,4 +13,7 @@ public class ApiError {
     private String error;
     private String message;
     private String path;
+
+    public ApiError(int i, String s) {
+    }
 }
