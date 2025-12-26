@@ -3,16 +3,12 @@ package com.internshipplatform.internshipplatform.dto;
 import com.internshipplatform.internshipplatform.entity.VerificationStatus;
 import lombok.*;
 
-import java.time.Instant;
-
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CompanyProfileDTO {
-
-    private Long id;
+public class CompanyPublicProfileDTO {
     private Long userId;
     private String name;
     private String industry;
@@ -21,9 +17,8 @@ public class CompanyProfileDTO {
     private String size;
     private String description;
     private String logoUrl;
-    private VerificationStatus verificationStatus; // UNVERIFIED, PENDING, APPROVED, REJECTED
-    private Instant verificationRequestedAt;
-    private Instant verificationReviewedAt;
-    private String verificationNote;
-    private Boolean verified; // verificationStatus == APPROVED
+
+    private VerificationStatus verificationStatus;
+    private Boolean verified;
 }
+

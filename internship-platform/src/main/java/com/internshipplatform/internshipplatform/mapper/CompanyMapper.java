@@ -2,6 +2,7 @@ package com.internshipplatform.internshipplatform.mapper;
 
 import com.internshipplatform.internshipplatform.dto.CompanyProfileDTO;
 import com.internshipplatform.internshipplatform.entity.Company;
+import com.internshipplatform.internshipplatform.entity.VerificationStatus;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -9,7 +10,7 @@ public class CompanyMapper {
 
     public CompanyProfileDTO toDto(Company company) {
         if (company == null) return null;
-
+        VerificationStatus status = company.getVerificationStatus();
         return CompanyProfileDTO.builder()
                 .id(company.getId())
                 .userId(company.getUserId())
@@ -20,6 +21,11 @@ public class CompanyMapper {
                 .size(company.getSize())
                 .description(company.getDescription())
                 .logoUrl(company.getLogoUrl())
+                .verificationStatus(status)
+                .verificationRequestedAt(company.getVerificationRequestedAt())
+                .verificationReviewedAt(company.getVerificationReviewedAt())
+                .verificationNote(company.getVerificationNote())
+                .verified(status == VerificationStatus.APPROVED)
                 .build();
     }
 

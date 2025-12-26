@@ -122,7 +122,7 @@ public class StudentInternshipService {
     public List<ApplicationResponseDTO> getApplicationsForInternship(Long internshipId, Long companyUserId) {
         // Check internship and ownership
         Internship internship = internshipRepository.findById(internshipId)
-                .orElseThrow(() -> new RuntimeException("Internship not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Internship not found"));
 
         if (!internship.getCompany().getId().equals(companyUserId)) {
             throw new ForbiddenException("You do not have permission to view applicants for this internship.");

@@ -92,11 +92,4 @@ public class GlobalExceptionHandler {
                 .build();
         return ResponseEntity.status(HttpStatus.CONFLICT).body(err);
     }
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ApiError> handleBadJson(HttpMessageNotReadableException ex) {
-        return ResponseEntity.badRequest().body(
-                new ApiError(400, "Invalid request body: " + ex.getMostSpecificCause().getMessage())
-        );
-    }
-
 }

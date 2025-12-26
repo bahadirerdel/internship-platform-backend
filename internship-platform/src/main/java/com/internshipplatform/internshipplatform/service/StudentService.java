@@ -1,9 +1,6 @@
 package com.internshipplatform.internshipplatform.service;
 
-import com.internshipplatform.internshipplatform.dto.ProfileStrengthResponseDTO;
-import com.internshipplatform.internshipplatform.dto.ResumeFileDto;
-import com.internshipplatform.internshipplatform.dto.StudentProfileResponse;
-import com.internshipplatform.internshipplatform.dto.StudentProfileUpdateRequest;
+import com.internshipplatform.internshipplatform.dto.*;
 import com.internshipplatform.internshipplatform.entity.Role;
 import com.internshipplatform.internshipplatform.entity.Student;
 import com.internshipplatform.internshipplatform.entity.User;
@@ -183,6 +180,22 @@ public class StudentService {
         missing.add(fieldName);
         return 0;
     }
+    public StudentPublicProfileDTO getPublicStudentProfile(Long studentUserId) {
+        Student student = studentRepository.findByUser_Id(studentUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
+
+        // assuming Student has userId + fields
+        return StudentPublicProfileDTO.builder()
+                .userId(student.getUser().getId())
+                .name(student.getUser().getName())
+                .university(student.getUniversity())
+                .department(student.getDepartment())
+                .graduationYear(student.getGraduationYear())
+                .skills(student.getSkills())
+                .bio(student.getBio())
+                .build();
+    }
+
 
     private boolean isNotBlank(String s) {
         return s != null && !s.trim().isEmpty();
