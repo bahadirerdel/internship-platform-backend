@@ -1,9 +1,12 @@
 package com.internshipplatform.internshipplatform.controller;
 
+import com.internshipplatform.internshipplatform.dto.ApplicationResponseDTO;
 import com.internshipplatform.internshipplatform.dto.CompanyProfileDTO;
+import com.internshipplatform.internshipplatform.dto.InterviewListItemDTO;
 import com.internshipplatform.internshipplatform.dto.InterviewResponseDTO;
 import com.internshipplatform.internshipplatform.security.JwtUtil;
 import com.internshipplatform.internshipplatform.service.CompanyService;
+import com.internshipplatform.internshipplatform.service.InternshipApplicationService;
 import com.internshipplatform.internshipplatform.service.InterviewService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +24,7 @@ public class CompanyController {
     private final CompanyService companyService;
     private final JwtUtil jwtUtil;
     private final InterviewService interviewService;
-
+    private final InternshipApplicationService internshipApplicationService;
 
     @PreAuthorize("hasRole('COMPANY')")
     @GetMapping("/me")
@@ -39,12 +42,12 @@ public class CompanyController {
         Long userId = jwtUtil.getUserIdFromRequest(request);
         return companyService.updateMyCompanyProfile(userId, body);
     }
-    @PreAuthorize("hasRole('COMPANY')")
     @GetMapping("/me/interviews")
-    public ResponseEntity<List<InterviewResponseDTO>> getMyInterviews(HttpServletRequest request) {
+    public ResponseEntity<List<InterviewListItemDTO>> getMyInterviews(HttpServletRequest request) {
         Long userId = jwtUtil.getUserIdFromRequest(request);
         return ResponseEntity.ok(interviewService.getMyCompanyInterviews(userId));
     }
+
     @PreAuthorize("hasRole('COMPANY')")
     @PostMapping("/me/verification-request")
     public ResponseEntity<String> requestVerification(HttpServletRequest request) {
@@ -52,5 +55,14 @@ public class CompanyController {
         companyService.requestVerification(userId);
         return ResponseEntity.ok("Verification request submitted");
     }
+    @PreAuthorize("hasRole('COMPANY')")
+    @GetMapping("/me/interns")
+    public ResponseEntity<List<ApplicationResponseDTO>> getMyInterns(HttpServletRequest request) {
+        Long userId = jwtUtil.getUserIdFromRequest(request);
+        return ResponseEntity.ok(
+                internshipApplicationService.getMyAcceptedInternsDto(userId)
+        );
+    }
+
 
 }

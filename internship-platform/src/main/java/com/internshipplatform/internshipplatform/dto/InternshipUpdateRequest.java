@@ -27,4 +27,6 @@ public class InternshipUpdateRequest {
     private String requiredSkills;  // e.g. "Java, Spring Boot, PostgreSQL"
 
     private LocalDate applicationDeadline;
+    private String requirements;
+    private String responsibilities;
 }

@@ -29,6 +29,8 @@ public class InternshipMapper {
                 .salaryRange(dto.getSalaryRange())
                 .requiredSkills(dto.getRequiredSkills())
                 .applicationDeadline(dto.getApplicationDeadline())
+                .requirements(dto.getRequirements())
+                .responsibilities(dto.getResponsibilities())
                 .build();
     }
 
@@ -41,6 +43,8 @@ public class InternshipMapper {
         internship.setSalaryRange(dto.getSalaryRange());
         internship.setRequiredSkills(dto.getRequiredSkills());
         internship.setApplicationDeadline(dto.getApplicationDeadline());
+        internship.setRequirements(dto.getRequirements());
+        internship.setResponsibilities(dto.getResponsibilities());
     }
 
     public InternshipResponseDTO toResponseDTO(Internship internship) {
@@ -70,6 +74,8 @@ public class InternshipMapper {
                 )
                 .companyVerificationStatus(verificationStatus.name())
                 .companyVerified(verificationStatus == VerificationStatus.APPROVED)
+                .requirements(internship.getRequirements())
+                .responsibilities(internship.getResponsibilities())
                 .build();
     }
 

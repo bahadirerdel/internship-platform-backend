@@ -10,6 +10,8 @@ public interface InterviewRepository extends JpaRepository<Interview, Long> {
     Optional<Interview> findByApplication_Id(Long applicationId);
     boolean existsByApplication_Id(Long applicationId);
     List<Interview> findAllByApplication_Student_IdOrderByScheduledAtAsc(Long studentUserId);
-
     List<Interview> findAllByApplication_Internship_Company_IdOrderByScheduledAtAsc(Long companyUserId);
+    List<Interview> findByApplication_Internship_Company_Id(Long companyUserId);
+    List<Interview> findByApplication_Student_Id(Long studentUserId);
+
 }

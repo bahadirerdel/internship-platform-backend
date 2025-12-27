@@ -1,5 +1,7 @@
 package com.internshipplatform.internshipplatform.service;
 
+import com.internshipplatform.internshipplatform.dto.ApplicationResponseDTO;
+import com.internshipplatform.internshipplatform.dto.InternshipResponseDTO;
 import com.internshipplatform.internshipplatform.dto.ResumeFileDto;
 import com.internshipplatform.internshipplatform.entity.*;
 import com.internshipplatform.internshipplatform.exception.ResourceNotFoundException;
@@ -9,9 +11,13 @@ import com.internshipplatform.internshipplatform.repository.InternshipApplicatio
 import com.internshipplatform.internshipplatform.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+
 
 @Service
 @RequiredArgsConstructor
@@ -22,34 +28,22 @@ public class InternshipApplicationService {
     private final NotificationService notificationService;
     private final ResumeStorageService resumeStorageService;
     private final StudentRepository studentRepository;
+
     @Transactional
-    public void updateApplicationStatus(
-            Long applicationId,
-            Long companyUserId,
-            ApplicationStatus newStatus
-    ) {
-        InternshipApplication app = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
-
-        // internship.company is User → compare userId
-        Long ownerCompanyUserId = app.getInternship().getCompany().getId();
-
-        if (!ownerCompanyUserId.equals(companyUserId)) {
-            throw new ForbiddenException("You are not the owner of this internship");
-        }
+    public void updateApplicationStatus(Long applicationId, Long companyUserId, ApplicationStatus newStatus) {
+        InternshipApplication app = getApplicationOrThrow(applicationId);
+        assertCompanyOwnsInternship(app, companyUserId);
 
         if (app.getStatus() == ApplicationStatus.WITHDRAWN) {
             throw new ForbiddenException("Cannot change status of withdrawn application");
         }
 
-        if (app.getStatus() == ApplicationStatus.ACCEPTED
-                || app.getStatus() == ApplicationStatus.REJECTED) {
+        if (app.getStatus() == ApplicationStatus.ACCEPTED || app.getStatus() == ApplicationStatus.REJECTED) {
             throw new ForbiddenException("Cannot change status of finalized application");
         }
 
-        // ✅ NEW: verification gate ONLY for ACCEPTED
+        // ✅ Gate only accepting behind verification
         if (newStatus == ApplicationStatus.ACCEPTED) {
-
             Company company = companyRepository.findByUserId(companyUserId)
                     .orElseThrow(() -> new ResourceNotFoundException("Company profile not found"));
 
@@ -60,35 +54,20 @@ public class InternshipApplicationService {
 
         app.setStatus(newStatus);
         applicationRepository.save(app);
-        Long studentUserId = app.getStudent().getId(); // in your model student id == userId
-        String msg = "Your application for '" + app.getInternship().getTitle() +
-                "' is now " + newStatus.name();
 
-        notificationService.notifyUser(studentUserId, msg);
-        String companyMsg = "You updated application #" + app.getId() +
-                " to " + newStatus.name();
-        notificationService.notifyUser(companyUserId, companyMsg);
+        notifyStatusChange(app, companyUserId, newStatus);
     }
+
     public ResumeFileDto downloadApplicantResume(Long applicationId, Long companyUserId) {
+        InternshipApplication app = getApplicationOrThrow(applicationId);
+        assertCompanyOwnsInternship(app, companyUserId);
 
-        InternshipApplication app = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
+        Long studentUserId = app.getStudent().getId();
 
-        Internship internship = app.getInternship();
-
-        // ✅ ownership check: company can only download for its own internship
-        if (!internship.getCompany().getId().equals(companyUserId)) {
-            throw new ForbiddenException("You do not have permission to download this resume.");
-        }
-
-        Long studentUserId = app.getStudent().getId(); // app.getStudent() is User
         Student student = studentRepository.findByUser_Id(studentUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student profile not found"));
 
         String storedFileName = student.getResumeFileName();
-        String originalFileName = student.getResumeOriginalFileName();
-        String contentType = student.getResumeContentType();
-
         if (storedFileName == null) {
             throw new ResourceNotFoundException("Student has not uploaded a resume");
         }
@@ -97,10 +76,85 @@ public class InternshipApplicationService {
 
         ResumeFileDto dto = new ResumeFileDto();
         dto.setResource(resource);
-        dto.setFileName(originalFileName != null ? originalFileName : storedFileName);
-        dto.setContentType(contentType != null ? contentType : "application/octet-stream");
+        dto.setFileName(student.getResumeOriginalFileName() != null
+                ? student.getResumeOriginalFileName()
+                : storedFileName);
+        dto.setContentType(student.getResumeContentType() != null
+                ? student.getResumeContentType()
+                : "application/octet-stream");
+
         return dto;
     }
 
+    // ✅ NEW: Company interns list (ACCEPTED applications)
+    public List<InternshipApplication> getMyAcceptedInterns(Long companyUserId) {
+        return applicationRepository.findByInternship_Company_IdAndStatus(companyUserId, ApplicationStatus.ACCEPTED);
+    }
+
+    // ---------------- private helpers ----------------
+
+    private InternshipApplication getApplicationOrThrow(Long applicationId) {
+        return applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
+    }
+
+    private void assertCompanyOwnsInternship(InternshipApplication app, Long companyUserId) {
+        Long ownerCompanyUserId = app.getInternship().getCompany().getId();
+        if (!ownerCompanyUserId.equals(companyUserId)) {
+            throw new ForbiddenException("You are not the owner of this internship");
+        }
+    }
+
+    private void notifyStatusChange(InternshipApplication app, Long companyUserId, ApplicationStatus status) {
+        Long studentUserId = app.getStudent().getId();
+
+        notificationService.notifyUser(
+                studentUserId,
+                "Your application for '" + app.getInternship().getTitle() + "' is now " + status.name()
+        );
+
+        notificationService.notifyUser(
+                companyUserId,
+                "You updated application #" + app.getId() + " to " + status.name()
+        );
+    }
+    public List<ApplicationResponseDTO> getMyAcceptedInternsDto(Long companyUserId) {
+
+        // You need a repo query that returns all ACCEPTED applications for internships owned by this company user
+        List<InternshipApplication> apps =
+                applicationRepository.findByInternship_Company_IdAndStatus(companyUserId, ApplicationStatus.ACCEPTED);
+
+        return apps.stream()
+                .map(app -> ApplicationResponseDTO.builder()
+                        .applicationId(app.getId())
+                        .status(app.getStatus())
+                        .appliedAt(app.getAppliedAt())
+
+                        .internship(InternshipResponseDTO.builder()
+                                .id(app.getInternship().getId())
+                                .title(app.getInternship().getTitle())
+                                .location(app.getInternship().getLocation())
+
+                                // ✅ FIX #1: remove .name() because it's a String in your project
+                                .internshipType(app.getInternship().getInternshipType())
+
+                                .applicationDeadline(app.getInternship().getApplicationDeadline())
+
+                                .companyName(app.getInternship().getCompany().getName())
+                                .companyId(app.getInternship().getCompany().getId()) // company userId in your model
+                                .build()
+                        )
+
+                        // student info (these are USER fields in your model)
+                        .studentId(app.getStudent().getId())
+                        .studentName(app.getStudent().getName())
+                        .studentEmail(app.getStudent().getEmail())
+
+                        .build())
+                // ✅ FIX #2: collect into List
+                .collect(Collectors.toList());
+    }
+
 }
+
 

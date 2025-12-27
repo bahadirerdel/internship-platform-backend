@@ -25,6 +25,7 @@ public class InternshipRequestDTO {
     private String internshipType;   // REMOTE / ONSITE / HYBRID etc.
     private String salaryRange;
     private String requiredSkills;   // e.g. "Java, Spring, PostgreSQL"
-
+    private String requirements;
+    private String responsibilities;
     private LocalDate applicationDeadline;
 }

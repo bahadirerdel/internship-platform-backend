@@ -1,5 +1,6 @@
 package com.internshipplatform.internshipplatform.service;
 
+import com.internshipplatform.internshipplatform.dto.InterviewListItemDTO;
 import com.internshipplatform.internshipplatform.dto.InterviewResponseDTO;
 import com.internshipplatform.internshipplatform.dto.ScheduleInterviewRequest;
 import com.internshipplatform.internshipplatform.entity.*;
@@ -111,32 +112,52 @@ public class InterviewService {
         return toResponseDTO(interview);
     }
     @Transactional(readOnly = true)
-    public List<InterviewResponseDTO> getMyStudentInterviews(Long studentUserId) {
+    public List<InterviewListItemDTO> getMyStudentInterviews(Long studentUserId) {
         return interviewRepository
                 .findAllByApplication_Student_IdOrderByScheduledAtAsc(studentUserId)
                 .stream()
-                .map(i -> InterviewResponseDTO.builder()
-                        .id(i.getId())
-                        .applicationId(i.getApplication().getId())
-                        .scheduledAt(i.getScheduledAt().toString())
-                        .meetingLink(i.getMeetingLink())
-                        .build())
-                .collect(Collectors.toList());
+                .map(this::toListItem)
+                .toList();
     }
 
     @Transactional(readOnly = true)
-    public List<InterviewResponseDTO> getMyCompanyInterviews(Long companyUserId) {
+    public List<InterviewListItemDTO> getMyCompanyInterviews(Long companyUserId) {
         return interviewRepository
                 .findAllByApplication_Internship_Company_IdOrderByScheduledAtAsc(companyUserId)
                 .stream()
-                .map(i -> InterviewResponseDTO.builder()
-                        .id(i.getId())
-                        .applicationId(i.getApplication().getId())
-                        .scheduledAt(i.getScheduledAt().toString())
-                        .meetingLink(i.getMeetingLink())
-                        .build())
-                .collect(Collectors.toList());
+                .map(this::toListItem)
+                .toList();
     }
+
+    private InterviewListItemDTO toListItem(Interview interview) {
+        var app = interview.getApplication();
+        var internship = app.getInternship();
+        var company = internship.getCompany(); // User
+        var student = app.getStudent();        // User
+
+        return InterviewListItemDTO.builder()
+                .id(interview.getId())
+                .applicationId(app.getId())
+
+                .scheduledAt(interview.getScheduledAt() != null ? interview.getScheduledAt().toString() : null)
+                .meetingLink(interview.getMeetingLink())
+
+                .status(interview.getStatus() != null ? interview.getStatus().name() : "SCHEDULED")
+                .cancelReason(interview.getCancelReason())
+                .cancelledAt(interview.getCancelledAt() != null ? interview.getCancelledAt().toString() : null)
+
+                .internshipId(internship.getId())
+                .internshipTitle(internship.getTitle())
+
+                .companyUserId(company.getId())
+                .companyName(company.getName())
+
+                .studentUserId(student.getId())
+                .studentName(student.getName())
+                .studentEmail(student.getEmail())
+                .build();
+    }
+
     @Transactional
     public InterviewResponseDTO cancelInterview(
             Long applicationId,

@@ -9,14 +9,16 @@ import java.util.Optional;
 
 public interface InternshipApplicationRepository extends JpaRepository<InternshipApplication, Long> {
 
-    Optional<InternshipApplication> findByStudentIdAndInternshipId(Long studentId, Long internshipId);
+    Optional<InternshipApplication> findByStudent_IdAndInternship_Id(Long studentUserId, Long internshipId);
 
-    Optional<InternshipApplication> findByInternshipIdAndStudentId(Long internshipId, Long studentId);
+    List<InternshipApplication> findByStudent_Id(Long studentUserId);
 
-    List<InternshipApplication> findByStudentId(Long studentId);
+    List<InternshipApplication> findByInternship_Id(Long internshipId);
 
-    List<InternshipApplication> findByInternshipId(Long internshipId);
+    // ✅ Company interns: all accepted apps for internships owned by this company user
+    List<InternshipApplication> findByInternship_Company_IdAndStatus(Long companyUserId, ApplicationStatus status);
 
+    // ✅ Optional: only accepted app between a student and company
     Optional<InternshipApplication> findFirstByStudent_IdAndInternship_Company_IdAndStatus(
             Long studentUserId,
             Long companyUserId,

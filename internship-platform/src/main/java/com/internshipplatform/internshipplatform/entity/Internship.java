@@ -34,6 +34,8 @@ public class Internship {
     private String location;          // e.g. "Izmir", "Remote"
     private String internshipType;    // e.g. "REMOTE", "ONSITE", "HYBRID"
     private String salaryRange;       // e.g. "Unpaid", "₺20k–₺30k"
+    private String requirements;
+    private String responsibilities;
 
     @Column(name = "required_skills")
     private String requiredSkills;   // <- must be String

@@ -81,12 +81,13 @@ public class StudentController {
         studentService.deleteResume(userId);
         return ResponseEntity.ok("Resume deleted");
     }
-    @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/me/interviews")
-    public ResponseEntity<List<InterviewResponseDTO>> getMyInterviews(HttpServletRequest request) {
+    public ResponseEntity<List<InterviewListItemDTO>> getMyInterviews(HttpServletRequest request) {
         Long userId = jwtUtil.getUserIdFromRequest(request);
-        return ResponseEntity.ok(interviewService.getMyStudentInterviews(userId));
+        return ResponseEntity.ok(interviewService.getMyCompanyInterviews(userId));
     }
+
+
 
     @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/me/strength")

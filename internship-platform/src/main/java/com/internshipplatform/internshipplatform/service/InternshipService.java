@@ -7,6 +7,7 @@ import com.internshipplatform.internshipplatform.dto.InternshipUpdateRequest;
 import com.internshipplatform.internshipplatform.mapper.InternshipMapper;
 import com.internshipplatform.internshipplatform.repository.CompanyRepository;
 import com.internshipplatform.internshipplatform.repository.InternshipRepository;
+import com.internshipplatform.internshipplatform.repository.InterviewRepository;
 import com.internshipplatform.internshipplatform.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -15,9 +16,8 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
-import com.internshipplatform.internshipplatform.exception.ResourceNotFoundException;
+
 import com.internshipplatform.internshipplatform.exception.ForbiddenException;
-import com.internshipplatform.internshipplatform.exception.BadRequestException;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +27,7 @@ public class InternshipService {
     private final UserRepository userRepository;
     private final InternshipMapper internshipMapper;
     private final CompanyRepository companyRepository;
+    private final InterviewRepository interviewRepository;
     // Public internship listing
     public List<InternshipResponseDTO> getAllPublicInternships() {
         List<Internship> internships = internshipRepository
@@ -170,6 +171,9 @@ public class InternshipService {
             throw new RuntimeException("You are not the owner of this internship.");
         }
 
+        if (request.getRequirements() != null) internship.setRequirements(request.getRequirements());
+        if (request.getResponsibilities() != null) internship.setResponsibilities(request.getResponsibilities());
+
         if (request.getTitle() != null) internship.setTitle(request.getTitle());
         if (request.getDescription() != null) internship.setDescription(request.getDescription());
         if (request.getLocation() != null) internship.setLocation(request.getLocation());
@@ -179,6 +183,7 @@ public class InternshipService {
         if (request.getApplicationDeadline() != null) {
             internship.setApplicationDeadline(request.getApplicationDeadline());
         }
+
 
         internship.setUpdatedAt(Instant.now());
         Internship saved = internshipRepository.save(internship);
@@ -223,13 +228,17 @@ public class InternshipService {
                 .salaryRange(internship.getSalaryRange())
                 .requiredSkills(internship.getRequiredSkills())
                 .applicationDeadline(internship.getApplicationDeadline())
-                .companyId(companyUserId) // keep same behavior as now
+                .companyId(companyUserId)
                 .companyName(company != null ? company.getName() : null)
                 .companyVerificationStatus(status.name())
                 .companyVerified(status == VerificationStatus.APPROVED)
                 .createdAt(internship.getCreatedAt())
                 .updatedAt(internship.getUpdatedAt())
+                .requirements(internship.getRequirements())
+                .responsibilities(internship.getResponsibilities())
+
                 .build();
     }
+
 
 }

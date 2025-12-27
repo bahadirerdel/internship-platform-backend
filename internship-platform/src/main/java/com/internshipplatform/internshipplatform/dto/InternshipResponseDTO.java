@@ -25,7 +25,8 @@ public class InternshipResponseDTO {
     private String salaryRange;
     private String requiredSkills;
     private LocalDate applicationDeadline;
-
+    private String requirements;
+    private String responsibilities;
     private Instant createdAt;
     private Instant updatedAt;
 }

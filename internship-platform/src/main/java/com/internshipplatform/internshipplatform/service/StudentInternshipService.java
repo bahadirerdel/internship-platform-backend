@@ -87,7 +87,7 @@ public class StudentInternshipService {
                 .orElseThrow(() -> new RuntimeException("Internship not found"));
 
         boolean alreadyApplied = applicationRepository
-                .findByStudentIdAndInternshipId(student.getId(), internship.getId())
+                .findByStudent_IdAndInternship_Id(student.getId(), internship.getId())
                 .isPresent();
 
         if (alreadyApplied) {
@@ -106,7 +106,7 @@ public class StudentInternshipService {
     public List<ApplicationResponseDTO> getMyApplications(Long studentId) {
         User student = getStudentOrThrow(studentId);
 
-        return applicationRepository.findByStudentId(student.getId())
+        return applicationRepository.findByStudent_Id(student.getId())
                 .stream()
                 .map(app -> ApplicationResponseDTO.builder()
                         .applicationId(app.getId())
@@ -128,7 +128,7 @@ public class StudentInternshipService {
             throw new ForbiddenException("You do not have permission to view applicants for this internship.");
         }
 
-        return applicationRepository.findByInternshipId(internshipId)
+        return applicationRepository.findByInternship_Id(internshipId)
                 .stream()
                 .map(app -> {
                     User s = app.getStudent();
@@ -145,7 +145,7 @@ public class StudentInternshipService {
     }
     public void withdrawApplication(Long internshipId, Long studentId) {
         InternshipApplication app = applicationRepository
-                .findByInternshipIdAndStudentId(internshipId, studentId)
+                .findByStudent_IdAndInternship_Id(internshipId, studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
 
         // Optional: Only allow withdraw while pending
