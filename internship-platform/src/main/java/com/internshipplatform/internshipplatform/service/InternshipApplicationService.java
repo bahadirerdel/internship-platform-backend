@@ -6,11 +6,15 @@ import com.internshipplatform.internshipplatform.dto.ResumeFileDto;
 import com.internshipplatform.internshipplatform.entity.*;
 import com.internshipplatform.internshipplatform.exception.ResourceNotFoundException;
 import com.internshipplatform.internshipplatform.exception.ForbiddenException;
+import com.internshipplatform.internshipplatform.mapper.InternshipMapper;
 import com.internshipplatform.internshipplatform.repository.CompanyRepository;
 import com.internshipplatform.internshipplatform.repository.InternshipApplicationRepository;
 import com.internshipplatform.internshipplatform.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,7 +32,7 @@ public class InternshipApplicationService {
     private final NotificationService notificationService;
     private final ResumeStorageService resumeStorageService;
     private final StudentRepository studentRepository;
-
+    private final InternshipMapper internshipMapper;
     @Transactional
     public void updateApplicationStatus(Long applicationId, Long companyUserId, ApplicationStatus newStatus) {
         InternshipApplication app = getApplicationOrThrow(applicationId);
@@ -153,6 +157,32 @@ public class InternshipApplicationService {
                         .build())
                 // ✅ FIX #2: collect into List
                 .collect(Collectors.toList());
+    }
+    public List<ApplicationResponseDTO> getCompanyApplications(Long companyUserId, Integer days) {
+        List<InternshipApplication> apps;
+
+        if (days != null && days > 0) {
+            Instant from = Instant.now().minus(days, ChronoUnit.DAYS);
+            apps = applicationRepository.findAllByCompanyUserIdAndAppliedAtAfterOrderByAppliedAtDesc(companyUserId, from);
+        } else {
+            apps = applicationRepository.findAllByCompanyUserIdOrderByAppliedAtDesc(companyUserId);
+        }
+
+        return apps.stream().map(app -> {
+            User s = app.getStudent();
+            Internship internship = app.getInternship();
+
+            return ApplicationResponseDTO.builder()
+                    .applicationId(app.getId())
+                    .status(app.getStatus())
+                    .appliedAt(app.getAppliedAt())
+                    .studentId(s != null ? s.getId() : null)
+                    .studentEmail(s != null ? s.getEmail() : null)
+                    .studentName(s != null ? s.getName() : null)
+                    .internship(internshipMapper.toResponseDTO(internship))
+                    .build();
+        }).toList();
+
     }
 
 }

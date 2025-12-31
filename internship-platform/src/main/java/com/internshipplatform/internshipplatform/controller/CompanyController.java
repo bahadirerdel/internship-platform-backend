@@ -26,6 +26,7 @@ public class CompanyController {
     private final InterviewService interviewService;
     private final InternshipApplicationService internshipApplicationService;
 
+
     @PreAuthorize("hasRole('COMPANY')")
     @GetMapping("/me")
     public CompanyProfileDTO getMyCompanyProfile(HttpServletRequest request) {
@@ -63,6 +64,14 @@ public class CompanyController {
                 internshipApplicationService.getMyAcceptedInternsDto(userId)
         );
     }
-
-
+    @PreAuthorize("hasRole('COMPANY')")
+    @GetMapping("/me/applications")
+    public ResponseEntity<List<ApplicationResponseDTO>> myApplications(
+            @RequestParam(required = false) Integer days,
+            HttpServletRequest request
+    ) {
+        Long companyUserId = jwtUtil.getUserIdFromRequest(request);
+        return ResponseEntity.ok(internshipApplicationService.getCompanyApplications(companyUserId, days));
+    }
 }
+

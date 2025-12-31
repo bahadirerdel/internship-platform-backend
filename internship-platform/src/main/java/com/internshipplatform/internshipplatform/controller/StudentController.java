@@ -84,7 +84,7 @@ public class StudentController {
     @GetMapping("/me/interviews")
     public ResponseEntity<List<InterviewListItemDTO>> getMyInterviews(HttpServletRequest request) {
         Long userId = jwtUtil.getUserIdFromRequest(request);
-        return ResponseEntity.ok(interviewService.getMyCompanyInterviews(userId));
+        return ResponseEntity.ok(interviewService.getMyStudentInterviews(userId));
     }
 
 

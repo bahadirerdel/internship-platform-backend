@@ -1,5 +1,6 @@
 package com.internshipplatform.internshipplatform.service;
 
+import com.internshipplatform.internshipplatform.dto.AdminActionResponse;
 import com.internshipplatform.internshipplatform.dto.AdminVerifyCompanyRequest;
 import com.internshipplatform.internshipplatform.dto.CompanyProfileDTO;
 import com.internshipplatform.internshipplatform.entity.Company;
@@ -37,11 +38,15 @@ public class AdminCompanyService {
                 .toList();
     }
 
-    public void verifyCompany(Long companyId, AdminVerifyCompanyRequest req) {
+    public AdminActionResponse verifyCompany(Long companyId, Long adminUserId, AdminVerifyCompanyRequest req) {
 
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
         VerificationStatus status = req.getStatus();
+
+        if (company.getVerificationStatus() != VerificationStatus.PENDING) {
+            throw new ForbiddenException("Only PENDING companies can be reviewed");
+        }
 
         if (req.getStatus() != VerificationStatus.APPROVED && req.getStatus() != VerificationStatus.REJECTED) {
             throw new ForbiddenException("Status must be APPROVED or REJECTED");
@@ -68,5 +73,10 @@ public class AdminCompanyService {
         }
 
         notificationService.notifyUser(companyUserId, msg);
+        return AdminActionResponse.builder()
+                .message("Company verification updated")
+                .adminUserId(adminUserId)
+                .at(company.getVerificationReviewedAt())
+                .build();
     }
 }

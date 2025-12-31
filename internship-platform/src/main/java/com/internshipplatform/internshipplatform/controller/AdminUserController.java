@@ -1,5 +1,6 @@
 package com.internshipplatform.internshipplatform.controller;
 
+import com.internshipplatform.internshipplatform.dto.AdminActionResponse;
 import com.internshipplatform.internshipplatform.dto.AdminUserDTO;
 import com.internshipplatform.internshipplatform.dto.BlockUserRequest;
 import com.internshipplatform.internshipplatform.entity.User;
@@ -27,7 +28,7 @@ public class AdminUserController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/block")
-    public ResponseEntity<?> blockUser(
+    public ResponseEntity<AdminActionResponse> blockUser(
             @PathVariable Long id,
             @RequestBody(required = false) BlockUserRequest body,
             HttpServletRequest request
@@ -35,17 +36,21 @@ public class AdminUserController {
         Long adminUserId = jwtUtil.getUserIdFromRequest(request);
         String reason = body != null ? body.getReason() : null;
 
-        adminUserService.blockUser(id, adminUserId, reason);
-        return ResponseEntity.ok("User blocked");
+        AdminActionResponse res = adminUserService.blockUser(id, adminUserId, reason);
+        return ResponseEntity.ok(res);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/unblock")
-    public ResponseEntity<?> unblockUser(@PathVariable Long id) {
-
-        adminUserService.unblockUser(id);
-        return ResponseEntity.ok("User unblocked");
+    public ResponseEntity<AdminActionResponse> unblockUser(
+            @PathVariable Long id,
+            HttpServletRequest request
+    ) {
+        Long adminUserId = jwtUtil.getUserIdFromRequest(request);
+        AdminActionResponse res = adminUserService.unblockUser(id, adminUserId);
+        return ResponseEntity.ok(res);
     }
+
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
