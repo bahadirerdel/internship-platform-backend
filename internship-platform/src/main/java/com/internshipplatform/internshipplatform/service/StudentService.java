@@ -36,12 +36,17 @@ public class StudentService {
 
         Student student = studentRepository.findByUser(user)
                 .orElseGet(() -> {
-                    // lazily create an empty profile if not exists
                     Student s = Student.builder()
                             .user(user)
                             .build();
                     return studentRepository.save(s);
                 });
+
+        // ✅ Backward compatibility: if coreSkills missing but legacy skills exists, auto-fill
+        if (!isNotBlank(student.getCoreSkills()) && isNotBlank(student.getSkills())) {
+            student.setCoreSkills(student.getSkills());
+            studentRepository.save(student);
+        }
 
         return studentMapper.toProfileResponse(student);
     }
@@ -64,11 +69,30 @@ public class StudentService {
                     return studentRepository.save(s);
                 });
 
-        // apply updates
+        // Base fields
         student.setUniversity(request.getUniversity());
         student.setDepartment(request.getDepartment());
         student.setBio(request.getBio());
-        student.setSkills(request.getSkills());
+
+        // Education
+        student.setDegreeLevel(request.getDegreeLevel());
+        student.setGraduationYear(request.getGraduationYear());
+        student.setGpa(request.getGpa());
+
+        // Skills (new)
+        student.setCoreSkills(request.getCoreSkills());
+        student.setOtherSkills(request.getOtherSkills());
+
+        // ✅ Keep legacy skills synced to coreSkills (so any old UI/pages using student.skills still work)
+        student.setSkills(student.getCoreSkills());
+
+        // Experience
+        student.setExperienceLevel(request.getExperienceLevel());
+        student.setTotalExperienceMonths(request.getTotalExperienceMonths());
+
+        // Extras
+        student.setCertifications(request.getCertifications());
+        student.setLanguages(request.getLanguages());
 
         studentRepository.save(student);
 
@@ -151,16 +175,36 @@ public class StudentService {
         int score = 0;
         List<String> missing = new java.util.ArrayList<>();
 
-        // Weights (tweak anytime)
-        score += addFieldScore(student.getUniversity(), 15, "university", missing);
-        score += addFieldScore(student.getDepartment(), 15, "department", missing);
-        score += (student.getGraduationYear() != null) ? 10 : addMissing("graduationYear", missing);
+        // ✅ Backward compat: treat legacy skills as coreSkills if coreSkills empty
+        String coreSkills = isNotBlank(student.getCoreSkills())
+                ? student.getCoreSkills()
+                : student.getSkills();
 
-        score += addFieldScore(student.getBio(), 15, "bio", missing);
-        score += addFieldScore(student.getSkills(), 15, "skills", missing);
+        // Weights (tweak anytime)
+        score += addFieldScore(student.getUniversity(), 10, "university", missing);
+        score += addFieldScore(student.getDepartment(), 10, "department", missing);
+
+        score += (student.getGraduationYear() != null) ? 8 : addMissing("graduationYear", missing);
+        score += addFieldScore(student.getBio(), 10, "bio", missing);
+
+        // Skills (core is important, other is bonus)
+        score += addFieldScore(coreSkills, 18, "coreSkills", missing);
+        score += isNotBlank(student.getOtherSkills()) ? 5 : 0;
+
+        // Education extras (optional)
+        score += (student.getDegreeLevel() != null) ? 7 : addMissing("degreeLevel", missing);
+        score += (student.getGpa() != null) ? 5 : 0;
+
+        // Experience (optional but good)
+        score += (student.getExperienceLevel() != null) ? 7 : addMissing("experienceLevel", missing);
+        score += (student.getTotalExperienceMonths() != null) ? 5 : 0;
+
+        // Extras (optional)
+        score += isNotBlank(student.getCertifications()) ? 5 : 0;
+        score += isNotBlank(student.getLanguages()) ? 3 : 0;
 
         // Resume upload presence
-        score += (isNotBlank(student.getResumeFileName())) ? 30 : addMissing("resume", missing);
+        score += (isNotBlank(student.getResumeFileName())) ? 20 : addMissing("resume", missing);
 
         if (score > 100) score = 100;
 
@@ -184,17 +228,33 @@ public class StudentService {
         Student student = studentRepository.findByUser_Id(studentUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
 
-        // assuming Student has userId + fields
+        String coreSkills = isNotBlank(student.getCoreSkills())
+                ? student.getCoreSkills()
+                : student.getSkills();
+
         return StudentPublicProfileDTO.builder()
                 .userId(student.getUser().getId())
                 .name(student.getUser().getName())
+
                 .university(student.getUniversity())
                 .department(student.getDepartment())
+                .degreeLevel(student.getDegreeLevel())
                 .graduationYear(student.getGraduationYear())
-                .skills(student.getSkills())
+                .gpa(student.getGpa())
+
+                .coreSkills(coreSkills)
+                .otherSkills(student.getOtherSkills())
+
+                .experienceLevel(student.getExperienceLevel())
+                .totalExperienceMonths(student.getTotalExperienceMonths())
+
+                .certifications(student.getCertifications())
+                .languages(student.getLanguages())
+
                 .bio(student.getBio())
                 .build();
     }
+
 
 
     private boolean isNotBlank(String s) {

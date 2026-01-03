@@ -50,5 +50,7 @@ public interface InternshipApplicationRepository extends JpaRepository<Internshi
             @Param("companyUserId") Long companyUserId,
             @Param("from") Instant from
     );
+    List<InternshipApplication> findAllByInternshipIdOrderByAppliedAtDesc(Long internshipId);
+
 }
 

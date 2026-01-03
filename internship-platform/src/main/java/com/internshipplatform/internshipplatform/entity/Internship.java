@@ -40,6 +40,16 @@ public class Internship {
     @Column(name = "required_skills")
     private String requiredSkills;   // <- must be String
 
+    @Column(name = "preferred_skills")
+    private String preferredSkills;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "minimum_degree_level")
+    private DegreeLevel minimumDegreeLevel;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "minimum_experience_level")
+    private ExperienceLevel minimumExperienceLevel;
 
     private LocalDate applicationDeadline;
 

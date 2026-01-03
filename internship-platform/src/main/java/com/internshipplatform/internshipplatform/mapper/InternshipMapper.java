@@ -28,6 +28,9 @@ public class InternshipMapper {
                 .internshipType(dto.getInternshipType())
                 .salaryRange(dto.getSalaryRange())
                 .requiredSkills(dto.getRequiredSkills())
+                .preferredSkills(dto.getPreferredSkills())
+                .minimumDegreeLevel(dto.getMinimumDegreeLevel())
+                .minimumExperienceLevel(dto.getMinimumExperienceLevel())
                 .applicationDeadline(dto.getApplicationDeadline())
                 .requirements(dto.getRequirements())
                 .responsibilities(dto.getResponsibilities())
@@ -45,6 +48,9 @@ public class InternshipMapper {
         internship.setApplicationDeadline(dto.getApplicationDeadline());
         internship.setRequirements(dto.getRequirements());
         internship.setResponsibilities(dto.getResponsibilities());
+        internship.setPreferredSkills(dto.getPreferredSkills());
+        internship.setMinimumDegreeLevel(dto.getMinimumDegreeLevel());
+        internship.setMinimumExperienceLevel(dto.getMinimumExperienceLevel());
     }
 
     public InternshipResponseDTO toResponseDTO(Internship internship) {
@@ -76,6 +82,9 @@ public class InternshipMapper {
                 .companyVerified(verificationStatus == VerificationStatus.APPROVED)
                 .requirements(internship.getRequirements())
                 .responsibilities(internship.getResponsibilities())
+                .preferredSkills(internship.getPreferredSkills())
+                .minimumDegreeLevel(internship.getMinimumDegreeLevel())
+                .minimumExperienceLevel(internship.getMinimumExperienceLevel())
                 .build();
     }
 

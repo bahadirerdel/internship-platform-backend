@@ -1,5 +1,7 @@
 package com.internshipplatform.internshipplatform.dto;
 
+import com.internshipplatform.internshipplatform.entity.DegreeLevel;
+import com.internshipplatform.internshipplatform.entity.ExperienceLevel;
 import lombok.*;
 
 @Getter
@@ -15,19 +17,36 @@ public class StudentProfileResponse {
     private String name;
     private String role;
 
-    private String skills;
+    // Education
     private String university;
     private String department;
+    private DegreeLevel degreeLevel;
     private Integer graduationYear;
+    private Double gpa;
 
-    // ✅ Resume fields (add these)
-    private String resumeFileName;          // internal stored name (uuid)
-    private String resumeOriginalFileName;  // original uploaded file name
+    // Skills
+    private String coreSkills;   // comma-separated
+    private String otherSkills;  // comma-separated
+
+    // legacy (optional; keep for backward compatibility)
+    private String skills;
+
+    // Experience
+    private ExperienceLevel experienceLevel;
+    private Integer totalExperienceMonths;
+
+    // Extras
+    private String certifications; // comma-separated
+    private String languages;      // comma-separated
+
+    // Resume metadata
+    private String resumeFileName;
+    private String resumeOriginalFileName;
     private Long resumeSize;
     private String resumeContentType;
 
-    // Optional convenience
     private String resumeDownloadUrl;
 
     private String bio;
 }
+

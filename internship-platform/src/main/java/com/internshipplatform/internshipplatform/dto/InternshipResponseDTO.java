@@ -1,5 +1,7 @@
 package com.internshipplatform.internshipplatform.dto;
 
+import com.internshipplatform.internshipplatform.entity.DegreeLevel;
+import com.internshipplatform.internshipplatform.entity.ExperienceLevel;
 import lombok.*;
 
 import java.time.Instant;
@@ -29,4 +31,8 @@ public class InternshipResponseDTO {
     private String responsibilities;
     private Instant createdAt;
     private Instant updatedAt;
+
+    private String preferredSkills;
+    private DegreeLevel minimumDegreeLevel;
+    private ExperienceLevel minimumExperienceLevel;
 }

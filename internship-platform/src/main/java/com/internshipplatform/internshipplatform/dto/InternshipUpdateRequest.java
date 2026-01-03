@@ -1,5 +1,7 @@
 package com.internshipplatform.internshipplatform.dto;
 
+import com.internshipplatform.internshipplatform.entity.DegreeLevel;
+import com.internshipplatform.internshipplatform.entity.ExperienceLevel;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -29,4 +31,8 @@ public class InternshipUpdateRequest {
     private LocalDate applicationDeadline;
     private String requirements;
     private String responsibilities;
+    private String preferredSkills;
+    private DegreeLevel minimumDegreeLevel;
+    private ExperienceLevel minimumExperienceLevel;
+
 }

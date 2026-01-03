@@ -14,26 +14,53 @@ public class StudentMapper {
 
         boolean hasResume = student.getResumeFileName() != null;
 
+        // ✅ Backward compatibility:
+        // If coreSkills empty but legacy skills exists, show legacy skills as coreSkills.
+        String coreSkills = isNotBlank(student.getCoreSkills())
+                ? student.getCoreSkills()
+                : student.getSkills();
+
         return StudentProfileResponse.builder()
                 .id(student.getId())
                 .userId(user.getId())
                 .email(user.getEmail())
                 .name(user.getName())
                 .role(user.getRole().name())
+
+                // Education
                 .university(student.getUniversity())
                 .department(student.getDepartment())
+                .degreeLevel(student.getDegreeLevel())
                 .graduationYear(student.getGraduationYear())
-                .bio(student.getBio())
-                .skills(student.getSkills())
+                .gpa(student.getGpa())
 
-                // ✅ resume mappings
+                // Skills
+                .coreSkills(coreSkills)
+                .otherSkills(student.getOtherSkills())
+                .skills(student.getSkills()) // optional legacy field
+
+                // Experience
+                .experienceLevel(student.getExperienceLevel())
+                .totalExperienceMonths(student.getTotalExperienceMonths())
+
+                // Extras
+                .certifications(student.getCertifications())
+                .languages(student.getLanguages())
+
+                // Resume mappings
                 .resumeFileName(student.getResumeFileName())
                 .resumeOriginalFileName(student.getResumeOriginalFileName())
                 .resumeSize(student.getResumeSize())
                 .resumeContentType(student.getResumeContentType())
 
-                // ✅ optional URL (frontend can use it or ignore it)
+                // Optional URL
                 .resumeDownloadUrl(hasResume ? "/api/students/me/resume/download" : null)
+
+                .bio(student.getBio())
                 .build();
+    }
+
+    private boolean isNotBlank(String s) {
+        return s != null && !s.trim().isEmpty();
     }
 }

@@ -179,6 +179,9 @@ public class InternshipService {
         if (request.getLocation() != null) internship.setLocation(request.getLocation());
         if (request.getInternshipType() != null) internship.setInternshipType(request.getInternshipType());
         if (request.getSalaryRange() != null) internship.setSalaryRange(request.getSalaryRange());
+        if (request.getPreferredSkills() != null) internship.setPreferredSkills(request.getPreferredSkills());
+        if (request.getMinimumDegreeLevel() != null) internship.setMinimumDegreeLevel(request.getMinimumDegreeLevel());
+        if (request.getMinimumExperienceLevel() != null) internship.setMinimumExperienceLevel(request.getMinimumExperienceLevel());
         if (request.getRequiredSkills() != null) internship.setRequiredSkills(request.getRequiredSkills());
         if (request.getApplicationDeadline() != null) {
             internship.setApplicationDeadline(request.getApplicationDeadline());
@@ -236,7 +239,9 @@ public class InternshipService {
                 .updatedAt(internship.getUpdatedAt())
                 .requirements(internship.getRequirements())
                 .responsibilities(internship.getResponsibilities())
-
+                .preferredSkills(internship.getPreferredSkills())
+                .minimumDegreeLevel(internship.getMinimumDegreeLevel())
+                .minimumExperienceLevel(internship.getMinimumExperienceLevel())
                 .build();
     }
 

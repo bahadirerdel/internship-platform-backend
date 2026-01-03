@@ -44,4 +44,33 @@ public class Student {
 
     private String bio;
     private String skills;
+
+    @Column(name = "core_skills", length = 2000)
+    private String coreSkills;
+
+    @Column(name = "other_skills", length = 2000)
+    private String otherSkills;
+
+    // Education
+    @Enumerated(EnumType.STRING)
+    @Column(name = "degree_level")
+    private DegreeLevel degreeLevel;
+
+    @Column(name = "gpa")
+    private Double gpa;
+
+    // Experience
+    @Enumerated(EnumType.STRING)
+    @Column(name = "experience_level")
+    private ExperienceLevel experienceLevel;
+
+    @Column(name = "total_experience_months")
+    private Integer totalExperienceMonths;
+
+    // Extras
+    @Column(name = "certifications", length = 2000)
+    private String certifications;
+
+    @Column(name = "languages", length = 1000)
+    private String languages;
 }
