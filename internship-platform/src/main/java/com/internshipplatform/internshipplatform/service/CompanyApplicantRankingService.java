@@ -46,6 +46,7 @@ public class CompanyApplicantRankingService {
                             .applicationId(app.getId())
                             .studentUserId(studentUserId)
                             .studentName(app.getStudent().getName())
+                            .appliedAt(app.getAppliedAt())
                             .university(student.getUniversity())
                             .department(student.getDepartment())
                             .degreeLevel(student.getDegreeLevel() != null ? student.getDegreeLevel().name() : null)

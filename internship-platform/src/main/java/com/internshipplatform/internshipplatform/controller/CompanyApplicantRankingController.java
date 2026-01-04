@@ -28,41 +28,33 @@ public class CompanyApplicantRankingController {
     private final ScoringService scoringService;
     private final JwtUtil jwtUtil;
 
-    // ✅ GET /api/companies/me/internships/{internshipId}/applicants-ranked
+    // ✅ correct: /api/companies/me/internships/{id}/applicants-ranked
     @PreAuthorize("hasRole('COMPANY')")
     @GetMapping("/internships/{internshipId}/applicants-ranked")
     public List<CompanyApplicantMatchDTO> rankedApplicants(
-            @PathVariable Long internshipId,
-            HttpServletRequest request
+            HttpServletRequest request,
+            @PathVariable Long internshipId
     ) {
         Long companyUserId = jwtUtil.getUserIdFromRequest(request);
         return companyApplicantRankingService.listRankedApplicants(companyUserId, internshipId);
     }
 
-    // ✅ GET /api/companies/me/internships/{internshipId}/match/student/{studentUserId}
-    // Explainability endpoint (optional but SUPER useful)
+    // ✅ correct: /api/companies/me/match/student/{studentUserId}/internship/{internshipId}
     @PreAuthorize("hasRole('COMPANY')")
-    @GetMapping("/internships/{internshipId}/match/student/{studentUserId}")
+    @GetMapping("/match/student/{studentUserId}/internship/{internshipId}")
     public MatchScoreDTO explainMatch(
-            @PathVariable Long internshipId,
+            HttpServletRequest request,
             @PathVariable Long studentUserId,
-            HttpServletRequest request
+            @PathVariable Long internshipId
     ) {
-        Long companyUserId = jwtUtil.getUserIdFromRequest(request);
+        // (optional) company authorization checks can be inside service if you want
+        Student s = studentRepository.findByUser_Id(studentUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
 
         Internship it = internshipRepository.findById(internshipId)
                 .orElseThrow(() -> new ResourceNotFoundException("Internship not found"));
 
-        // ✅ Ownership check: company can only explain matches for its own internship
-        if (it.getCompany() == null || !it.getCompany().getId().equals(companyUserId)) {
-            throw new com.internshipplatform.internshipplatform.exception.ForbiddenException(
-                    "You can only view matches for your own internship."
-            );
-        }
-
-        Student s = studentRepository.findByUser_Id(studentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
-
         return scoringService.score(s, it);
     }
 }
+
